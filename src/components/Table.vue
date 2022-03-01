@@ -2,218 +2,128 @@
   <div class="q-pa-md">
     <q-table
       class="my-sticky-dynamic"
-      title="Treats"
-      :rows="rows"
+      title="Assignment of Open Work Orders"
+      :rows="row"
       :columns="columns"
-      :loading="loading"
       row-key="index"
-      virtual-scroll
-      :virtual-scroll-item-size="48"
-      :virtual-scroll-sticky-size-start="48"
-      :pagination="pagination"
-      :rows-per-page-options="[0]"
-      @virtual-scroll="onScroll"
-    />
+      v-model:selected="selected"
+    >
+      <template class="q-pa-none" v-slot:top>
+        <div class="full-width column">
+          <div class="q-pa-sm row text-white" style="background-color: #21ba45">
+            <p class="q-ma-sm text-subtitle2">
+              <q-icon class="text-h5" name="assignment" /> Assignment of Open
+              Work Orders
+            </p>
+            <q-space />
+            <q-btn unelevated color="orange" label="Start WO" class="" />
+          </div>
+          <div class="text-white">
+            <div class="row q-mt-sm items-center">
+              <div class="q-ml-md">
+                <q-chip
+                  class="q-pa-md"
+                  color="green-11"
+                  text-color="black"
+                  label="List"
+                  icon="list"
+                />
+                <q-chip
+                  class="q-pa-md"
+                  color="green-11"
+                  text-color="black"
+                  label="Calendar"
+                  icon="calendar_month"
+                />
+                <q-chip
+                  class="q-pa-md"
+                  color="green-11"
+                  text-color="black"
+                  label="User"
+                  icon="group"
+                />
+              </div>
+            </div>
+            <div class="q-mt-sm">
+              <p class="q-ml-lg text-black text-subtitle1 q-mb-none">
+                List Table
+              </p>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template v-slot:body="props">
+        <q-tr :id="props.pageIndex + 1" :props="props">
+          <q-td key="index" :props="props">
+            {{ props.row.id }}
+          </q-td>
+          <q-td key="data" :props="props">
+            {{ props.row.data }}
+          </q-td>
+          <q-td key="data2" :props="props">
+            {{ props.row.data2 }}
+          </q-td>
+          <q-td key="timestamp" :props="props">
+            {{ convetTimeStampToDate(props.row.timestamp) }}
+          </q-td>
+        </q-tr>
+        <q-space />
+      </template>
+    </q-table>
   </div>
 </template>
 
 <script>
-import { ref, computed, nextTick } from "vue";
+import { ref } from "vue";
+
+import dayjs from "dayjs";
 
 const columns = [
   {
     name: "index",
-    label: "#",
+    label: "ID",
     field: "index",
-  },
-  {
-    name: "name",
-    required: true,
-    label: "Dessert (100g serving)",
-    align: "left",
-    field: (row) => row.name,
-    format: (val) => val,
-    sortable: true,
-  },
-  {
-    name: "calories",
     align: "center",
-    label: "Calories",
-    field: "calories",
     sortable: true,
   },
-  { name: "fat", label: "Fat (g)", field: "fat", sortable: true },
-  { name: "carbs", label: "Carbs (g)", field: "carbs" },
-  { name: "protein", label: "Protein (g)", field: "protein" },
-  { name: "sodium", label: "Sodium (mg)", field: "sodium" },
   {
-    name: "calcium",
-    label: "Calcium (%)",
-    field: "calcium",
+    name: "data",
+
+    label: "Data 1",
+    align: "center",
+    field: "data",
     sortable: true,
-    sort: (a, b) => parseInt(a, 10) - parseInt(b, 10),
   },
   {
-    name: "iron",
-    label: "Iron (%)",
-    field: "iron",
+    name: "data2",
+
+    label: "Data 2",
+    align: "center",
+    field: "data2",
     sortable: true,
-    sort: (a, b) => parseInt(a, 10) - parseInt(b, 10),
+  },
+  {
+    name: "timestamp",
+    align: "center",
+    label: "Timestamp",
+    field: "timestamp",
+    sortable: true,
   },
 ];
-
-const seed = [
-  {
-    name: "Frozen Yogurt",
-    calories: 159,
-    fat: 6.0,
-    carbs: 24,
-    protein: 4.0,
-    sodium: 87,
-    calcium: "14%",
-    iron: "1%",
-  },
-  {
-    name: "Ice cream sandwich",
-    calories: 237,
-    fat: 9.0,
-    carbs: 37,
-    protein: 4.3,
-    sodium: 129,
-    calcium: "8%",
-    iron: "1%",
-  },
-  {
-    name: "Eclair",
-    calories: 262,
-    fat: 16.0,
-    carbs: 23,
-    protein: 6.0,
-    sodium: 337,
-    calcium: "6%",
-    iron: "7%",
-  },
-  {
-    name: "Cupcake",
-    calories: 305,
-    fat: 3.7,
-    carbs: 67,
-    protein: 4.3,
-    sodium: 413,
-    calcium: "3%",
-    iron: "8%",
-  },
-  {
-    name: "Gingerbread",
-    calories: 356,
-    fat: 16.0,
-    carbs: 49,
-    protein: 3.9,
-    sodium: 327,
-    calcium: "7%",
-    iron: "16%",
-  },
-  {
-    name: "Jelly bean",
-    calories: 375,
-    fat: 0.0,
-    carbs: 94,
-    protein: 0.0,
-    sodium: 50,
-    calcium: "0%",
-    iron: "0%",
-  },
-  {
-    name: "Lollipop",
-    calories: 392,
-    fat: 0.2,
-    carbs: 98,
-    protein: 0,
-    sodium: 38,
-    calcium: "0%",
-    iron: "2%",
-  },
-  {
-    name: "Honeycomb",
-    calories: 408,
-    fat: 3.2,
-    carbs: 87,
-    protein: 6.5,
-    sodium: 562,
-    calcium: "0%",
-    iron: "45%",
-  },
-  {
-    name: "Donut",
-    calories: 452,
-    fat: 25.0,
-    carbs: 51,
-    protein: 4.9,
-    sodium: 326,
-    calcium: "2%",
-    iron: "22%",
-  },
-  {
-    name: "KitKat",
-    calories: 518,
-    fat: 26.0,
-    carbs: 65,
-    protein: 7,
-    sodium: 54,
-    calcium: "12%",
-    iron: "6%",
-  },
-];
-
-// we generate lots of rows here
-let allRows = [];
-for (let i = 0; i < 1000; i++) {
-  allRows = allRows.concat(seed.slice(0).map((r) => ({ ...r })));
-}
-allRows.forEach((row, index) => {
-  row.index = index;
-});
-
-const pageSize = 50;
-const lastPage = Math.ceil(allRows.length / pageSize);
 
 export default {
-  setup() {
-    const nextPage = ref(2);
-    const loading = ref(false);
-
-    const rows = computed(() =>
-      allRows.slice(0, pageSize * (nextPage.value - 1))
-    );
+  props: {
+    row: Array,
+  },
+  setup(props) {
+    const convetTimeStampToDate = (timeStamp) => {
+      const date = dayjs(timeStamp).format("YYYY-MM-DD HH:MM:ss");
+      return date;
+    };
 
     return {
       columns,
-      rows,
-
-      nextPage,
-      loading,
-
-      pagination: { rowsPerPage: 0 },
-
-      onScroll({ to, ref }) {
-        const lastIndex = rows.value.length - 1;
-
-        if (
-          loading.value !== true &&
-          nextPage.value < lastPage &&
-          to === lastIndex
-        ) {
-          loading.value = true;
-
-          setTimeout(() => {
-            nextPage.value++;
-            nextTick(() => {
-              ref.refresh();
-              loading.value = false;
-            });
-          }, 500);
-        }
-      },
+      convetTimeStampToDate,
     };
   },
 };
@@ -222,12 +132,16 @@ export default {
 <style lang="sass">
 .my-sticky-dynamic
   /* height or max-height is important */
-  height: 410px
+  height: 450px
 
-  .q-table__top,
-  .q-table__bottom,
+.q-table__top /* bg color is important for th; just specify one */
+  padding: 0
+
+
   thead tr:first-child th /* bg color is important for th; just specify one */
     background-color: #fff
+    color: #000
+
 
   thead tr th
     position: sticky
