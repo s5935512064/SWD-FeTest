@@ -1,12 +1,14 @@
 <template>
   <div class="q-pa-md">
+    <LineChartVue v-show="dialog" />
     <q-table
-      class="my-sticky-dynamic"
+      class="my-sticky-header-table"
       title="Assignment of Open Work Orders"
       :rows="row"
       :columns="columns"
       row-key="index"
       v-model:selected="selected"
+      :pagination="initialPagination"
     >
       <template class="q-pa-none" v-slot:top>
         <div class="full-width column">
@@ -44,14 +46,24 @@
                 />
               </div>
             </div>
-            <div class="q-mt-sm">
+            <div class="q-mt-sm row">
               <p class="q-ml-lg text-black text-subtitle1 q-mb-none">
                 List Table
               </p>
+              <q-space />
+              <q-btn
+                class="q-mr-lg"
+                unelevated
+                @click="getRowData"
+                color="green-12"
+                icon="poll"
+                label="GRAPH VIEW"
+              />
             </div>
           </div>
         </div>
       </template>
+
       <template v-slot:body="props">
         <q-tr :id="props.pageIndex + 1" :props="props">
           <q-td key="index" :props="props">
@@ -61,7 +73,8 @@
             {{ props.row.data }}
           </q-td>
           <q-td key="data2" :props="props">
-            {{ props.row.data2 }}
+            <p v-if="null === props.row.data2">0</p>
+            <p v-if="null !== props.row.data2">{{ props.row.data2 }}</p>
           </q-td>
           <q-td key="timestamp" :props="props">
             {{ convetTimeStampToDate(props.row.timestamp) }}
@@ -74,8 +87,9 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 
+import LineChartVue from "./LineChart.vue";
 import dayjs from "dayjs";
 
 const columns = [
@@ -112,8 +126,17 @@ const columns = [
 ];
 
 export default {
+  components: {
+    LineChartVue,
+  },
   props: {
     row: Array,
+  },
+
+  methods: {
+    getRowData() {
+      this.dialog = !this.dialog;
+    },
   },
   setup(props) {
     const convetTimeStampToDate = (timeStamp) => {
@@ -122,15 +145,24 @@ export default {
     };
 
     return {
+      dialog: ref(false),
+      closeDialog: ref(false),
       columns,
       convetTimeStampToDate,
+      initialPagination: {
+        sortBy: "desc",
+        descending: false,
+        page: 2,
+        rowsPerPage: 20,
+        // rowsNumber: xx if getting data from a server
+      },
     };
   },
 };
 </script>
 
 <style lang="sass">
-.my-sticky-dynamic
+.my-sticky-header-table
   /* height or max-height is important */
   height: 450px
 
@@ -138,18 +170,20 @@ export default {
   padding: 0
 
 
-  thead tr:first-child th /* bg color is important for th; just specify one */
-    background-color: #fff
-    color: #000
+thead tr:first-child th /* bg color is important for th; just specify one */
+  background-color: #FFF
+  color: #000
+  position: sticky
+  z-index: 1
 
 
-  thead tr th
-    position: sticky
-    z-index: 1
+thead tr th
+  position: sticky
+  z-index: 1
   /* this will be the loading indicator */
-  thead tr:last-child th
-    /* height of all previous header rows */
-    top: 48px
-  thead tr:first-child th
-    top: 0
+thead tr:last-child th
+  /* height of all previous header rows */
+  top: 48px
+thead tr:first-child th
+  top: 0px
 </style>
